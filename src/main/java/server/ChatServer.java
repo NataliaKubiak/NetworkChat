@@ -13,7 +13,7 @@ public class ChatServer {
 
         try {
             serverSocket = new ServerSocket(PORT);
-            System.out.println("Сервер стартовал");
+            System.out.println("Server started");
 
             while (true) {
                     clientSocket = serverSocket.accept();
