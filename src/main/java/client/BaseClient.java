@@ -2,6 +2,7 @@ package client;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import utils.PropertiesLoader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public abstract class BaseClient {
-    private int port;
+    private int clientPort;
 
     protected final Logger logger;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
@@ -23,12 +24,15 @@ public abstract class BaseClient {
     }
 
     protected void runLogic() {
-        try (Socket clientSocket = new Socket("localhost", 8060);
+        PropertiesLoader propertiesLoader = new PropertiesLoader("config.properties");
+        int serverPort = Integer.parseInt(propertiesLoader.getProperty("server.port"));
+
+        try (Socket clientSocket = new Socket("localhost", serverPort);
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-            port = Integer.parseInt(in.readLine());
-            logger.info("Client on PORT {} started", port);
+            clientPort = Integer.parseInt(in.readLine());
+            logger.info("Client on PORT {} started", clientPort);
 
             Scanner scanner = new Scanner(System.in);
             System.out.println("Enter your name:");
@@ -38,7 +42,7 @@ public abstract class BaseClient {
             logger.info("User entered Name: {}", name);
 
             new Thread(() -> {
-                logger.info("Reading msg thread for Client on PORT {} started", port);
+                logger.info("Reading msg thread for Client on PORT {} started", clientPort);
                 while (true) {
                     String input;
                     try {
@@ -51,7 +55,7 @@ public abstract class BaseClient {
                     }
 
                     System.out.println(input);
-                    logger.info("Received and printed to console PORT: {} msg: '{}'", port, input);
+                    logger.info("Received and printed to console PORT: {} msg: '{}'", clientPort, input);
                 }
             }).start();
 

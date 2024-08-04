@@ -3,6 +3,7 @@ package server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import utils.Message;
+import utils.PropertiesLoader;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,18 +14,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class ChatServer {
-    public static final int PORT = 8060;
+    private static int serverPort;
     private static final Logger logger = LogManager.getLogger();
 
     public static ConcurrentMap<Integer, ClientHandler> activeClients = new ConcurrentHashMap<>(10);
     public static BlockingQueue<Message> msgQueue = new ArrayBlockingQueue<>(100);
 
     public static void main(String[] args) {
+        PropertiesLoader propertiesLoader = new PropertiesLoader("config.properties");
+        serverPort = Integer.parseInt(propertiesLoader.getProperty("server.port"));
+
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
 
         try {
-            serverSocket = new ServerSocket(PORT);
+            serverSocket = new ServerSocket(serverPort);
             logger.info("Server started");
             MessageSender messageSender = new MessageSender(activeClients, msgQueue);
             new Thread(messageSender).start();
