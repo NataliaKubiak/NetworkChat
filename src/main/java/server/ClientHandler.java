@@ -1,7 +1,8 @@
 package server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import utils.Message;
-import utils.logs.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,8 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public class ClientHandler implements Runnable {
 
-    private Logger logger = Logger.getInstance();
-    private final String source;
+    private static final Logger logger = LogManager.getLogger();
 
     private Socket clientSocket;
     private ConcurrentMap<Integer, ClientHandler> activeClients;
@@ -29,7 +29,6 @@ public class ClientHandler implements Runnable {
         this.msgQueue = msgQueue;
         this.activeClients = activeClients;
         port = clientSocket.getPort();
-        source = "Client handler (Server Side) " + port;
     }
 
     @Override
@@ -39,73 +38,58 @@ public class ClientHandler implements Runnable {
             output = new PrintWriter(clientSocket.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-            logger.log(source, "New connection accepted on port " + port);
+            logger.info("New connection accepted on PORT {}", port);
             output.println(port);
 
-            //in - what we get from client
             String name = input.readLine();
             if (name == null) {
                 return;
             } else if (name.isEmpty()) {
                 name = "Client " + port;
             }
-            logger.log(source, "Received a name: " + name);
+            logger.info("Received a name: {}", name);
 
-            LocalDateTime time = LocalDateTime.now();
-            System.out.printf("[%s] Client name: %s\n", time, name);
+            msgQueue.put(new Message(port, name, LocalDateTime.now(), name + " joined our cool chat!"));
 
             boolean flag = true;
             while (flag) {
                 String input = this.input.readLine();
                 if ("/exit".equalsIgnoreCase(input)) {
-                    System.out.printf("[%s] %s quit this amazing chat (what a fool!)\n", time, name);
+                    msgQueue.put(new Message(port, name, LocalDateTime.now(), name + " quit this amazing chat"));
                     flag = false;
                 } else if (input == null) {
                     return;
                 } else {
                     Message msg = new Message(port, name, LocalDateTime.now(), input);
                     msgQueue.put(msg);
-                    logger.log(source, "Msg was added to Queue: " + msg);
+                    logger.info("Msg was added to Queue: {}", msg);
                 }
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("An error occurred while performing the task", e);
         } finally {
             try {
                 activeClients.remove(port);
-                logger.log(source, "Client was removed from HashMap activeClients");
+                logger.info("Client on PORT: {} was removed from HashMap activeClients", port);
                 clientSocket.close();
-                logger.log(source, "ClientSocket on port " + port + " closed");
+                logger.info("ClientSocket on PORT {} closed", port);
                 if (input != null) {
                     input.close();
-                    logger.log(source, "PORT " + port + " INPUT Stream closed");
+                    logger.info("PORT {} INPUT Stream closed", port);
                 }
                 if (output != null) {
                     output.close();
-                    logger.log(source, "PORT " + port + " OUTPUT Stream closed");
+                    logger.info("PORT {} OUTPUT Stream closed", port);
                 }
             } catch (IOException e) {
-                logger.log(source, "Throw IOException");
-                throw new RuntimeException(e);
+                logger.error("An error occurred while performing the task", e);
             }
         }
     }
 
-    public BufferedReader getInput() {
-        return input;
-    }
-
-    public PrintWriter getOutput() {
-        return output;
-    }
-
     public void sendMessage(String msg) {
         output.println(msg);
-        logger.log(source, "Msg was sent from " + port + ". Msg text: " + msg);
-    }
-
-    public int getPort() {
-        return port;
+        logger.info("Msg was sent from Server to Client on PORT {}. Msg text: {}", port, msg);
     }
 }

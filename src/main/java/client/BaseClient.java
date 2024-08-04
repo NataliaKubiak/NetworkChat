@@ -1,6 +1,7 @@
 package client;
 
-import utils.logs.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,68 +13,61 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public abstract class BaseClient {
-//    private int id;
-    private Logger logger = Logger.getInstance();
-//    private String sourse = "Base Client " + id;
+    private int port;
+
+    protected final Logger logger;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
+
+    public BaseClient() {
+        logger = LogManager.getLogger(getClass());
+    }
 
     protected void runLogic() {
         try (Socket clientSocket = new Socket("localhost", 8060);
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-            int id = Integer.parseInt(in.readLine());
-            String sourse = "Base Client " + id;
-            System.out.println("Client port/id = " + id);
+            port = Integer.parseInt(in.readLine());
+            logger.info("Client on PORT {} started", port);
 
             Scanner scanner = new Scanner(System.in);
             System.out.println("Enter your name:");
-            String strFromConsole = scanner.nextLine();
-            //out - what we send to server
-            out.println(strFromConsole);
-            logger.log(sourse, "User entered Name: " + strFromConsole + ". It was sent to Client Handler");
+            String name = scanner.nextLine();
+            System.out.println("Hello " + name + "! Type your msg and press ENTER (for quitting type '/exit')");
+            out.println(name);
+            logger.info("User entered Name: {}", name);
 
             new Thread(() -> {
-                logger.log(sourse + "Reading msg thread", "Started");
+                logger.info("Reading msg thread for Client on PORT {} started", port);
                 while (true) {
                     String input;
                     try {
                         input = in.readLine();
+                        if (input == null) {
+                            return;
+                        }
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        return;
                     }
+
                     System.out.println(input);
-                    logger.log(sourse + "Reading msg thread", "Received and printed to console msg: " + input);
+                    logger.info("Received and printed to console PORT: {} msg: '{}'", port, input);
                 }
             }).start();
 
-
             boolean flag = true;
             while (flag) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
-                logger.log(sourse, "Before Scanner where User enters the Msg");
-                System.out.println(">>>>>>>>>> Enter your msg (for quitting enter '/exit')");
-                System.out.print(LocalDateTime.now().format(formatter) + " | You: ");
+                System.out.println(LocalDateTime.now().format(formatter) + " | You: ");
                 String msg = scanner.nextLine();
-                logger.log(sourse, "User entered the msg: " + msg);
+                logger.info("User entered the msg: {}", msg);
+
                 out.println(msg);
-                logger.log(sourse, "Msg was sent to Client Handler");
                 if ("/exit".equalsIgnoreCase(msg)) {
                     flag = false;
-                    logger.log(sourse, "Exit while loop");
-                } else {
-                    //in - what we get from server
-//                    String input = in.readLine();
-//                    System.out.println(input);
-//                    logger.log(sourse, "Received and printed to console msg: " + input);
                 }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-//            logger.log(sourse, "Exception happened");
+        } catch (Exception e) {
+            logger.error("An error occurred while performing the task", e);
         }
     }
-
-//    public int getId() {
-//        return id;
-//    }
 }

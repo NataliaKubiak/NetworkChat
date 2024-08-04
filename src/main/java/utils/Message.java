@@ -5,25 +5,25 @@ import java.time.format.DateTimeFormatter;
 
 public class Message {
 
-    private int senderId;
+    private int senderPort;
     private String name = null;
     private LocalDateTime timeStamp;
     private String text;
 
-    public Message(int senderId, String name, LocalDateTime timeStamp, String text) {
-        this.senderId = senderId;
+    public Message(int senderPort, String name, LocalDateTime timeStamp, String text) {
+        this.senderPort = senderPort;
         this.name = name;
         this.timeStamp = timeStamp;
         this.text = text;
     }
 
-    public int getSenderId() {
-        return senderId;
+    public int getSenderPort() {
+        return senderPort;
     }
 
     public String getName() {
         if (name == null) {
-            return "Client " + senderId;
+            return "Client " + senderPort;
         }
         return name;
     }
@@ -40,9 +40,9 @@ public class Message {
     @Override
     public String toString() {
         return "Message{" +
-                "senderId=" + senderId +
+                "senderPort=" + senderPort +
                 ", timeStamp='" + timeStamp + '\'' +
-                ", msg='" + text + '\'' +
+                ", text='" + text + '\'' +
                 '}';
     }
 }

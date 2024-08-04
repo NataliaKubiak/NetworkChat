@@ -1,7 +1,8 @@
 package server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import utils.Message;
-import utils.logs.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,8 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public class ChatServer {
     public static final int PORT = 8060;
-    private Logger logger = Logger.getInstance();
-    private final String source = "Chat Server";
+    private static final Logger logger = LogManager.getLogger();
 
     public static ConcurrentMap<Integer, ClientHandler> activeClients = new ConcurrentHashMap<>(10);
     public static BlockingQueue<Message> msgQueue = new ArrayBlockingQueue<>(100);
@@ -25,24 +25,25 @@ public class ChatServer {
 
         try {
             serverSocket = new ServerSocket(PORT);
-            System.out.println("Server started");
+            logger.info("Server started");
             MessageSender messageSender = new MessageSender(activeClients, msgQueue);
             new Thread(messageSender).start();
 
             while (true) {
-                    clientSocket = serverSocket.accept();
-                    ClientHandler clientHandler = new ClientHandler(clientSocket, msgQueue, activeClients);
-                    activeClients.put(clientSocket.getPort(), clientHandler);
-                    new Thread(clientHandler).start();
+                clientSocket = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(clientSocket, msgQueue, activeClients);
+                activeClients.put(clientSocket.getPort(), clientHandler);
+                new Thread(clientHandler).start();
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("An error occurred while performing the task", ex);
         } finally {
             if (serverSocket != null) {
                 try {
                     serverSocket.close();
+                    logger.info("Server socket closed");
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    logger.error("An error occurred while performing the task", ex);
                 }
             }
         }
