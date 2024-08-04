@@ -28,7 +28,11 @@ public class Message {
         return name;
     }
 
-    public String getTimeStamp() {
+    public String getFullTimeStamp() {
+        return timeStamp + "";
+    }
+
+    public String getShortTimeStamp() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
         return timeStamp.format(formatter);
     }

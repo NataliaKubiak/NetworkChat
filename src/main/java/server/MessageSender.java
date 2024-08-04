@@ -28,11 +28,12 @@ public class MessageSender implements Runnable {
                 for (int port : activeClients.keySet()) {
                     if (port != msg.getSenderPort()) {
                         if (msg.getText().contains("joined our cool chat") || msg.getText().contains("quit this amazing chat")) {
-                            activeClients.get(port).sendMessage(msg.getTimeStamp() + " | INFO: " + msg.getText());
+                            activeClients.get(port).sendMessage(msg.getShortTimeStamp() + " | INFO: " + msg.getText());
+                            logger.info("Msg was sent from Server to Client on PORT {}. MSG INFO: Author: Info-message. TimeStamp: {}. Text: {}", port, msg.getFullTimeStamp(), msg.getText());
                         } else {
-                            activeClients.get(port).sendMessage(msg.getTimeStamp() + " | " + msg.getName() + ": " + msg.getText());
+                            activeClients.get(port).sendMessage(msg.getShortTimeStamp() + " | " + msg.getName() + ": " + msg.getText());
+                            logger.info("Msg was sent from Server to Client on PORT {}. MSG INFO: Author: {}. TimeStamp: {}. Text: {}", port, msg.getName(), msg.getFullTimeStamp(), msg.getText());
                         }
-                        logger.info("Msg was sent: {}", msg.getText());
                     }
                 }
             } catch (InterruptedException e) {

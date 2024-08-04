@@ -90,6 +90,5 @@ public class ClientHandler implements Runnable {
 
     public void sendMessage(String msg) {
         output.println(msg);
-        logger.info("Msg was sent from Server to Client on PORT {}. Msg text: {}", port, msg);
     }
 }
