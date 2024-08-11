@@ -2,6 +2,17 @@
 
 [ТЗ на Проект](https://github.com/netology-code/jd-homeworks/blob/master/diploma/networkchat.md)
 
+## Как это работает:
+- Склонировать проект.
+- Запустить ChatServer из IDE.
+- Запустить ChatClient1 из IDE. В консоли появиться "Enter your name: " - ввести имя и нажать ENTER.
+- Запустить ChatClient2 из IDE. В консоли появиться "Enter your name: " - ввести имя и нажать ENTER.
+- Запустить ChatClient3 из IDE. В консоли появиться "Enter your name: " - ввести имя и нажать ENTER.
+- Вводить сообщения поочередно из консоли ChatClient1, ChatClient2, ChatClient3 - сообщения будут отправляться в консоль подключенным клиентам.
+- Для отключения клиента ввести "/exit" (в любом регистре, можно даже "/eXiT").
+- Для остановки сервера нажать кнопку остановки в IDE (красный квадратик).
+- После остановки Клиентов и Сервера в корне проекта появится папка logs с файлом file.log куда записались все логи и Клиентов и Сервера (при повторном запуске этот файл дополняется новыми логами)
+
 ## Структура Проекта
 ```
 network-chat/
@@ -70,3 +81,8 @@ network-chat/
 
 - **src.test.java.server**
   - тут будут тесты для серверной части
+
+## Зависимости
+
+- **log4j-core + log4j-api**: Для логирования
+- **junit-jupiter-engine + junit-jupiter-engine + mockito-core + mockito-junit-jupiter**: Для тестирования
