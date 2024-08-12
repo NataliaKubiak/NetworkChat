@@ -21,7 +21,7 @@ public class ClientHandler implements Runnable {
 
     public ClientHandler(ClientSocket socketClient,
                          BlockingQueue<Message> msgQueue,
-                         ConcurrentMap<Integer,ClientHandler> activeClients) {
+                         ConcurrentMap<Integer, ClientHandler> activeClients) {
         this.socketClient = socketClient;
         this.msgQueue = msgQueue;
         this.activeClients = activeClients;

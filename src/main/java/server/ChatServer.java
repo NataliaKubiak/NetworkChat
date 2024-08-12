@@ -62,15 +62,14 @@ public class ChatServer {
     }
 
     private void startClientThread(ClientHandler clientHandler) {
-            try {
-                activeClients.put(clientHandler.getPort(), clientHandler);
-                clientThreadPool.submit(clientHandler);
-//                new Thread(clientHandler).start();
-                logger.info("New client started on PORT {}", clientHandler.getPort());
-                logger.info("Active clients: {}", activeClients.size());
-            } catch (Exception e) {
-                logger.error("Failed to start client thread on PORT {}", clientHandler.getPort(), e);
-            }
+        try {
+            activeClients.put(clientHandler.getPort(), clientHandler);
+            clientThreadPool.submit(clientHandler);
+            logger.info("New client started on PORT {}", clientHandler.getPort());
+            logger.info("Active clients: {}", activeClients.size());
+        } catch (Exception e) {
+            logger.error("Failed to start client thread on PORT {}", clientHandler.getPort(), e);
+        }
     }
 
     private void closeSocketServer() {
