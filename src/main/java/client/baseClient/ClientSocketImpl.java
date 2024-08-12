@@ -6,20 +6,20 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class RealSocketClient implements SocketClient {
+public class ClientSocketImpl implements ClientSocket {
 
     private final Socket socket;
     private final BufferedReader in;
     private final PrintWriter out;
 
-    public RealSocketClient(Socket socket) throws IOException {
+    public ClientSocketImpl(Socket socket) throws IOException {
         this.socket = socket;
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.out = new PrintWriter(socket.getOutputStream(), true);
     }
 
     @Override
-    public String readLine() throws IOException {
+    public String getMessage() throws IOException {
         return in.readLine();
     }
 
@@ -33,5 +33,10 @@ public class RealSocketClient implements SocketClient {
         in.close();
         out.close();
         socket.close();
+    }
+
+    @Override
+    public int getPort() {
+        return socket.getPort();
     }
 }

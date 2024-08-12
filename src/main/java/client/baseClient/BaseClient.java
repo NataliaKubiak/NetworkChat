@@ -11,15 +11,18 @@ import java.util.Scanner;
 
 public abstract class BaseClient {
 
+    private final ClientSocket clientSocket;
     private int clientPort;
-    protected final Logger logger;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
-    private final SocketClient socketClient;
     private final Scanner scanner;
     private final PrintStream outStream;
 
-    public BaseClient(SocketClient socketClient, Scanner scanner, PrintStream outStream) {
-        this.socketClient = socketClient;
+    protected final Logger logger;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
+
+    public BaseClient(ClientSocket clientSocket,
+                      Scanner scanner,
+                      PrintStream outStream) {
+        this.clientSocket = clientSocket;
         this.scanner = scanner;
         this.outStream = outStream;
         logger = LogManager.getLogger(getClass());
@@ -45,7 +48,7 @@ public abstract class BaseClient {
 
     private void initializeClientPort() throws IOException {
         try {
-            clientPort = Integer.parseInt(socketClient.readLine());
+            clientPort = Integer.parseInt(clientSocket.getMessage());
             logger.info("Client on PORT {} started", clientPort);
         } catch (NumberFormatException e) {
             logger.error("Invalid port number received from server", e);
@@ -60,7 +63,7 @@ public abstract class BaseClient {
         outStream.println("Enter your name: ");
         String name = scanner.nextLine();
         outStream.println("Hello " + name + "! Type your msg and press ENTER (for quitting type '/exit')");
-        socketClient.sendMessage(name);
+        clientSocket.sendMessage(name);
         logger.info("User entered Name: {}", name);
     }
 
@@ -69,7 +72,7 @@ public abstract class BaseClient {
             logger.info("Reading msg thread for Client on PORT {} started", clientPort);
             try {
                 while (true) {
-                    String input = socketClient.readLine();
+                    String input = clientSocket.getMessage();
                     if (input == null) {
                         logger.info("Server closed the connection");
                         break;
@@ -90,7 +93,7 @@ public abstract class BaseClient {
             String msg = scanner.nextLine();
             logger.info("User entered the msg: {}", msg);
 
-            socketClient.sendMessage(msg);
+            clientSocket.sendMessage(msg);
             if ("/exit".equalsIgnoreCase(msg)) {
                 logger.info("User requested to exit. Stopping client on PORT {}", clientPort);
                 flag = false;
@@ -100,10 +103,10 @@ public abstract class BaseClient {
 
     private void closeSocketClient() {
         try {
-            socketClient.close();
+            clientSocket.close();
             logger.info("Socket client closed successfully");
         } catch (IOException e) {
-            logger.error("Error closing socket client", e);
+            logger.error("Error closing socket Client", e);
         }
     }
 }

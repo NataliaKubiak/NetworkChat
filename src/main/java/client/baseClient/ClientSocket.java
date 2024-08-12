@@ -2,9 +2,10 @@ package client.baseClient;
 
 import java.io.IOException;
 
-public interface SocketClient {
+public interface ClientSocket {
 
-    String readLine() throws IOException;
+    String getMessage() throws IOException;
     void sendMessage(String msg);
     void close() throws IOException;
+    int getPort();
 }
