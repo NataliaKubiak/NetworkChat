@@ -14,10 +14,11 @@ public class ClientHandler implements Runnable {
 
     private ClientSocket socketClient;
     private final int port;
-    private static final Logger logger = LogManager.getLogger();
-
+    private String clientName;
     private ConcurrentMap<Integer, ClientHandler> activeClients;
     private BlockingQueue<Message> msgQueue;
+
+    private static final Logger logger = LogManager.getLogger();
 
     public ClientHandler(ClientSocket socketClient,
                          BlockingQueue<Message> msgQueue,
@@ -31,49 +32,89 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            logger.info("New connection accepted on PORT {}", port);
-            socketClient.sendMessage(String.valueOf(port));
+            acceptNewConnection();
 
-            String name = socketClient.getMessage();
-            if (name == null) {
-                return;
-            } else if (name.isEmpty()) {
-                name = "Client " + port;
-            }
-            logger.info("Received a name: {}", name);
+            if (!isClientNameSet()) return;
 
-            msgQueue.put(new Message(port, name, LocalDateTime.now(), name + " joined our cool chat!"));
+            if (!processChatClientInput()) return;
+        } catch (InterruptedException e) {
+            logger.error("Thread was interrupted: {}", e.getMessage());
+        } catch (IOException e) {
+            logger.error("IO Error occurred: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred", e);
+        } finally {
+            disconnectClient();
+        }
+    }
 
+    private boolean processChatClientInput() throws IOException, InterruptedException {
+        try {
             boolean flag = true;
             while (flag) {
                 String input = socketClient.getMessage();
                 if ("/exit".equalsIgnoreCase(input)) {
-                    msgQueue.put(new Message(port, name, LocalDateTime.now(), name + " quit this amazing chat"));
+                    msgQueue.put(new Message(port, clientName, LocalDateTime.now(), clientName + " quit this amazing chat"));
+                    logger.info("Client on PORT {} sent '/exit' message", port);
                     flag = false;
                 } else if (input == null) {
-                    return;
+                    return false;
                 } else {
-                    Message msg = new Message(port, name, LocalDateTime.now(), input);
+                    Message msg = new Message(port, clientName, LocalDateTime.now(), input);
                     msgQueue.put(msg);
-                    logger.info("Msg was added to Queue: {}", msg);
+                    logger.info("Message was added to Queue: {}", msg);
                 }
             }
+            return true;
+        } catch (InterruptedException e) {
+            logger.error("Error adding Message to Queue while reading client message", e);
+            throw e;
+        } catch (IOException e) {
+            logger.error("Error reading from socket while reading client message", e);
+            throw e;
+        }
+    }
 
-        } catch (Exception e) {
-            logger.error("An error occurred while performing the task", e);
-        } finally {
-            try {
-                activeClients.remove(port);
-                logger.info("Client on PORT: {} was removed from HashMap activeClients", port);
-                socketClient.close();
-            } catch (IOException e) {
-                logger.error("An error occurred while performing the task", e);
+    private boolean isClientNameSet() throws IOException, InterruptedException {
+        try {
+            clientName = socketClient.getMessage();
+            if (clientName == null) {
+                return false;
+            } else if (clientName.isEmpty()) {
+                clientName = "Client " + port;
             }
+            logger.info("Client on PORT {} received a name: {}", port, clientName);
+            msgQueue.put(new Message(port, clientName, LocalDateTime.now(), clientName + " joined our cool chat!"));
+            return true;
+
+        } catch (InterruptedException e) {
+            logger.error("Error adding Message to Queue while setting client the name", e);
+            throw e;
+        } catch (IOException e) {
+            logger.error("Error reading from socket while setting client the name", e);
+            throw e;
+        }
+    }
+
+    private void acceptNewConnection() {
+        socketClient.sendMessage(String.valueOf(port));
+        logger.info("New connection accepted on PORT {}", port);
+    }
+
+    private void disconnectClient() {
+        try {
+            activeClients.remove(port);
+            logger.info("Client on PORT: {} was removed from ActiveClients", port);
+            socketClient.close();
+            logger.info("Client socket on PORT {} closed successfully", port);
+        } catch (IOException e) {
+            logger.error("Error closing socket client", e);
         }
     }
 
     public void sendMessage(String msg) {
         socketClient.sendMessage(msg);
+        logger.info("Message was sent successfully from ClientHandler on PORT {}", port);
     }
 
     public int getPort() {
