@@ -21,13 +21,14 @@ network-chat/
 │   ├── main/
 │   │   ├── java/
 │   │   │   ├── client/
-│   │   │   │   ├── baseClient/
-│   │   │   │   │   ├── BaseClient.java
-│   │   │   │   │   ├── RealSocketClient.java
-│   │   │   │   │   └── SocketClient.java
+│   │   │   │   ├── BaseClient.java
 │   │   │   │   ├── ChatClient1.java
 │   │   │   │   ├── ChatClient2.java
 │   │   │   │   └── ChatClient3.java
+│   │   │   │ 
+│   │   │   ├── clientSocket/
+│   │   │   │   ├── ClientSocket.java
+│   │   │   │   └── ClientSocketImpl.java
 │   │   │   │ 
 │   │   │   ├── server/
 │   │   │   │   ├── ChatServer.java
@@ -53,16 +54,16 @@ network-chat/
 ```
 
 ## Описание Пакетов и Классов
-
-- **src.main.java.client.baseClient**
-  - **BaseClient.java**: Главный класс клиента. Управляет подключением к серверу и взаимодействием с пользователем. Принимает и отправляет сообщения.
-  - **RealSocketClient.java**: Класс, который управляет потоками ввода-вывода клиента на клиентской стороне и на серверной строне. Реализует методы SocketClient.
-  - **SocketClient.java**: Интерфейс, который содержит методы для управления потоками ввода-вывода клиента.
  
 - **src.main.java.client**
+  - **BaseClient.java**: Главный класс клиента. Управляет подключением к серверу и взаимодействием с пользователем. Принимает и отправляет сообщения.
   - **ChatClient1.java**: Класс клиента для запуска. Наследник BaseClient. Запускает клиент1 через метод main.
   - **ChatClient2.java**: Класс клиента для запуска. Наследник BaseClient. Запускает клиент2 через метод main.
   - **ChatClient3.java**: Класс клиента для запуска. Наследник BaseClient. Запускает клиент3 через метод main.
+
+- **src.main.java.clientSocket**
+  - **ClientSocket.java**: Интерфейс, который содержит методы для управления потоками ввода-вывода клиента.
+  - **ClientSocketImpl.java**: Класс, который управляет потоками ввода-вывода клиента на клиентской стороне и на серверной строне. Реализует методы SocketClient.
 
 - **src.main.java.server**
   - **ChatServer.java**: Главный класс сервера. Отвечает за запуск сервера и управление клиентскими подключениями. Запускает новый поток ClientHandler на каждое клиентское подключение.

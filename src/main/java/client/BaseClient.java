@@ -1,5 +1,6 @@
-package client.baseClient;
+package client;
 
+import clientSocket.ClientSocket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

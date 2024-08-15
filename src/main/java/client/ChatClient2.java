@@ -1,8 +1,7 @@
 package client;
 
-import client.baseClient.BaseClient;
-import client.baseClient.ClientSocketImpl;
-import client.baseClient.ClientSocket;
+import clientSocket.ClientSocketImpl;
+import clientSocket.ClientSocket;
 import utils.PropertiesLoader;
 
 import java.io.IOException;

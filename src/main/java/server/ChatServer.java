@@ -1,7 +1,7 @@
 package server;
 
-import client.baseClient.ClientSocket;
-import client.baseClient.ClientSocketImpl;
+import clientSocket.ClientSocket;
+import clientSocket.ClientSocketImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import utils.Message;
