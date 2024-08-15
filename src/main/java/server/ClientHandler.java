@@ -34,9 +34,9 @@ public class ClientHandler implements Runnable {
         try {
             acceptNewConnection();
 
-            if (!isClientNameSet()) return;
+            if (!setClientNameAndGreet()) return;
 
-            if (!processChatClientInput()) return;
+            processChatClientInput();
         } catch (InterruptedException e) {
             logger.error("Thread was interrupted: {}", e.getMessage());
         } catch (IOException e) {
@@ -48,7 +48,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private boolean processChatClientInput() throws IOException, InterruptedException {
+    private void processChatClientInput() throws IOException, InterruptedException {
         try {
             boolean flag = true;
             while (flag) {
@@ -58,14 +58,13 @@ public class ClientHandler implements Runnable {
                     logger.info("Client on PORT {} sent '/exit' message", port);
                     flag = false;
                 } else if (input == null) {
-                    return false;
+                    break;
                 } else {
                     Message msg = new Message(port, clientName, LocalDateTime.now(), input);
                     msgQueue.put(msg);
                     logger.info("Message was added to Queue: {}", msg);
                 }
             }
-            return true;
         } catch (InterruptedException e) {
             logger.error("Error adding Message to Queue while reading client message", e);
             throw e;
@@ -75,7 +74,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private boolean isClientNameSet() throws IOException, InterruptedException {
+    private boolean setClientNameAndGreet() throws IOException, InterruptedException {
         try {
             clientName = socketClient.getMessage();
             if (clientName == null) {

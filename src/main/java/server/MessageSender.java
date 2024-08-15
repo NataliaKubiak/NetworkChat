@@ -14,7 +14,8 @@ public class MessageSender implements Runnable {
     private ConcurrentMap<Integer, ClientHandler> activeClients;
     private BlockingQueue<Message> msgQueue;
 
-    public MessageSender(ConcurrentMap<Integer, ClientHandler> activeClients, BlockingQueue<Message> msgQueue) {
+    public MessageSender(ConcurrentMap<Integer, ClientHandler> activeClients,
+                         BlockingQueue<Message> msgQueue) {
         this.activeClients = activeClients;
         this.msgQueue = msgQueue;
     }
@@ -23,22 +24,52 @@ public class MessageSender implements Runnable {
     public void run() {
         while (true) {
             try {
-                Message msg = msgQueue.take();
+                Message msg = getMessageFromQueue();
 
                 for (int port : activeClients.keySet()) {
                     if (port != msg.getSenderPort()) {
-                        if (msg.getText().contains("joined our cool chat") || msg.getText().contains("quit this amazing chat")) {
-                            activeClients.get(port).sendMessage(msg.getShortTimeStamp() + " | INFO: " + msg.getText());
-                            logger.info("Msg was sent from Server to Client on PORT {}. MSG INFO: Author: Info-message. TimeStamp: {}. Text: {}", port, msg.getFullTimeStamp(), msg.getText());
+
+                        if (msg.containsText("joined our cool chat") || msg.containsText("quit this amazing chat")) {
+                            sendInfoMessage(port, msg);
                         } else {
-                            activeClients.get(port).sendMessage(msg.getShortTimeStamp() + " | " + msg.getName() + ": " + msg.getText());
-                            logger.info("Msg was sent from Server to Client on PORT {}. MSG INFO: Author: {}. TimeStamp: {}. Text: {}", port, msg.getName(), msg.getFullTimeStamp(), msg.getText());
+                            sendMessageToClient(port, msg);
                         }
                     }
                 }
             } catch (InterruptedException e) {
-                logger.error("An error occurred while performing the task", e);
+                logger.error("Thread was interrupted: {}", e.getMessage());
             }
         }
     }
+
+    private Message getMessageFromQueue() throws InterruptedException {
+        Message msg = null;
+
+        try {
+            msg = msgQueue.take();
+        } catch (InterruptedException e) {
+            logger.error("Error getting message from Message Queue", e);
+        }
+        return msg;
+    }
+
+    private void sendInfoMessage(int recipientPort, Message msg) {
+        activeClients
+                .get(recipientPort)
+                .sendMessage(msg.getShortTimeStamp() + " | INFO: " + msg.getText());
+
+        logger.info("Msg was sent from Server to Client on PORT {}. MSG INFO: Author: Info-message. TimeStamp: {}. Text: {}",
+                recipientPort, msg.getFullTimeStamp(), msg.getText());
+    }
+
+    private void sendMessageToClient(int recipientPort, Message msg) {
+        activeClients
+                .get(recipientPort)
+                .sendMessage(msg.getShortTimeStamp() + " | " + msg.getName() + ": " + msg.getText());
+
+        logger.info("Msg was sent from Server to Client on PORT {}. MSG INFO: Author: {}. TimeStamp: {}. Text: {}",
+                recipientPort, msg.getName(), msg.getFullTimeStamp(), msg.getText());
+    }
+
+
 }

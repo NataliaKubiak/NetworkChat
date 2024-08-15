@@ -41,6 +41,10 @@ public class Message {
         return text;
     }
 
+    public boolean containsText(String text) {
+        return this.text.contains(text);
+    }
+
     @Override
     public String toString() {
         return "Message{" +
