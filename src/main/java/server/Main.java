@@ -5,10 +5,7 @@ import utils.PropertiesLoader;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.*;
 
 public class Main {
     public static final int MAX_CLIENTS = 10;
@@ -22,12 +19,13 @@ public class Main {
         ConcurrentMap<Integer, ClientHandler> activeClients = new ConcurrentHashMap<>(10);
         BlockingQueue<Message> msgQueue = new ArrayBlockingQueue<>(100);
         MessageSender messageSender = new MessageSender(activeClients, msgQueue);
+        ExecutorService clientThreadPool = Executors.newFixedThreadPool(MAX_CLIENTS);
 
         ChatServer chatServer = new ChatServer(serverSocket,
                 activeClients,
                 msgQueue,
                 messageSender,
-                MAX_CLIENTS);
+                clientThreadPool);
         chatServer.runLogic();
     }
 }

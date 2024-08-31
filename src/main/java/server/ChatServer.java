@@ -24,23 +24,23 @@ public class ChatServer {
                       ConcurrentMap<Integer, ClientHandler> activeClients,
                       BlockingQueue<Message> msgQueue,
                       MessageSender messageSender,
-                      int maxClients) {
+                      ExecutorService clientThreadPool) {
         this.serverSocket = serverSocket;
         this.activeClients = activeClients;
         this.msgQueue = msgQueue;
         this.messageSender = messageSender;
-        this.clientThreadPool = Executors.newFixedThreadPool(maxClients);
+        this.clientThreadPool = clientThreadPool;
     }
 
     public void runLogic() {
         try {
             logger.info("Server started on PORT {}", serverSocket.getLocalPort());
-            startMessageSenderThread();
+            startMessageSenderThread(messageSender, false);
 
             while (!serverSocket.isClosed()) {
                 try {
                     ClientSocket clientSocket = new ClientSocketImpl(serverSocket.accept());
-                    ClientHandler clientHandler = new ClientHandler(clientSocket, msgQueue, activeClients);
+                    ClientHandler clientHandler = getClientHandler(clientSocket);
                     startClientThread(clientHandler);
                 } catch (IOException e) {
                     logger.error("Error accepting client connection", e);
@@ -52,19 +52,30 @@ public class ChatServer {
         }
     }
 
-    private void startMessageSenderThread() {
+    //это я вынесла, чтобы можно было замокировать и вернуть clientHandlerMock
+    ClientHandler getClientHandler(ClientSocket clientSocket) {
+        return new ClientHandler(clientSocket, msgQueue, activeClients);
+    }
+
+    void startMessageSenderThread(MessageSender messageSender, boolean runSynchronously) {
         try {
-            new Thread(messageSender).start();
-            logger.info("Message Sender Thread started");
+            if (runSynchronously) {
+                clientThreadPool.submit(messageSender).get();
+                logger.info("Message Sender Thread started synchronously");
+            } else {
+                new Thread(messageSender).start();
+//                clientThreadPool.submit(messageSender);
+                logger.info("Message Sender Thread started");
+            }
         } catch (Exception e) {
             logger.error("Failed to start Message Sender Thread", e);
         }
     }
 
-    private void startClientThread(ClientHandler clientHandler) {
+    void startClientThread(ClientHandler clientHandler) {
         try {
-            activeClients.put(clientHandler.getPort(), clientHandler);
             clientThreadPool.submit(clientHandler);
+            activeClients.put(clientHandler.getPort(), clientHandler);
             logger.info("New client started on PORT {}", clientHandler.getPort());
             logger.info("Active clients: {}", activeClients.size());
         } catch (Exception e) {
@@ -72,7 +83,7 @@ public class ChatServer {
         }
     }
 
-    private void closeSocketServer() {
+    void closeSocketServer() {
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close();
@@ -83,7 +94,7 @@ public class ChatServer {
         }
     }
 
-    private void shutdownClientThreadPool() {
+    void shutdownClientThreadPool() {
         try {
             clientThreadPool.shutdown();
             if (!clientThreadPool.awaitTermination(60, TimeUnit.SECONDS)) {
